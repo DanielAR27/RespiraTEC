@@ -67,17 +67,17 @@ export default function Navbar() {
 
   return (
     <nav className="relative bg-white shadow-sm">
-      <div className="flex items-center justify-between px-6 py-4 md:px-8">
-        
+      <div className="relative flex items-center justify-between px-6 py-4 md:px-8">
+
         <div className="flex items-center gap-3 cursor-pointer">
-          <img 
-            src={logo} 
-            alt="Logo RespiraTEC" 
-            className="h-10 md:h-12 w-auto object-contain" 
+          <img
+            src={logo}
+            alt="Logo RespiraTEC"
+            className="h-10 md:h-12 w-auto object-contain"
           />
         </div>
 
-        <ul className="hidden md:flex items-center space-x-8 text-[15px]">
+        <ul className="hidden md:flex absolute inset-x-0 justify-center items-center space-x-8 text-[15px] pointer-events-none [&>li]:pointer-events-auto">
           {navItems.map((item) => {
             const isSelected = item.path === currentPath;
             return (
