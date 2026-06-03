@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'; // Para proteger 
 import Navbar from './components/Navbar';
 import Inicio from './pages/public/Inicio';
 import Eventos from './pages/public/Eventos';
+import Descuentos from './pages/public/Descuentos';
 import Contacto from './pages/public/Contacto';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -27,6 +28,9 @@ import AdminAsociacionesNew from './pages/admin/asociaciones/AdminAsociacionesNe
 import AdminAsociacionesEdit from './pages/admin/asociaciones/AdminAsociacionesEdit';
 import AdminAsociacionesView from './pages/admin/asociaciones/AdminAsociacionesView';
 import AdminUsuarios from './pages/admin/usuarios/AdminUsuarios';
+import Talleres from './pages/public/talleres/Talleres';
+import TallerDetalle from './pages/public/talleres/TallerDetalle';
+import MisTalleres from './pages/user/MisTalleres';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Se crea un componente intermedio para poder usar el hook useAuth para el redireccionamiento del Login
@@ -47,10 +51,14 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Inicio />} />
           <Route path="/eventos" element={<Eventos />} />
+          <Route path="/descuentos" element={<Descuentos />} />
           <Route path="/asociaciones" element={<Asociaciones />} />
           <Route path="/asociaciones/detalle/:id" element={<AsociacionDetalle />} />
           <Route path="/perfil" element={<MiPerfil />} />
           <Route path="/mis-asociaciones" element={<MisAsociaciones />} />
+          <Route path="/talleres" element={<Talleres />} />
+          <Route path="/talleres/:id" element={<TallerDetalle />} />
+          <Route path="/mis-talleres" element={<MisTalleres />} />
           <Route path="/asociaciones/view/:id" element={<AdminAsociacionesView />} />
           <Route path="/asociaciones/edit/:id" element={<AdminAsociacionesEdit />} />
           <Route path="/contacto" element={<Contacto />} />

@@ -116,6 +116,10 @@ exports.eliminarTaller = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Taller no encontrado' });
     }
 
+    // Borrado en cascada de inscripciones
+    const Inscripcion = require('../models/Inscripcion');
+    await Inscripcion.deleteMany({ taller: taller._id });
+
     await taller.deleteOne();
 
     res.status(200).json({ success: true, data: {} });

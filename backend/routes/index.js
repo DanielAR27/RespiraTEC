@@ -10,6 +10,7 @@ const tallerRoutes = require('./tallerRoutes');
 const asociacionesRoutes = require('./asociaciones');
 const afiliacionesRoutes = require('./afiliaciones');
 const usuarioRoutes = require('./usuarioRoutes');
+const inscripcionRoutes = require('./inscripcionRoutes');
 
 // Montar las rutas en sus respectivos "caminos"
 router.use('/eventos', eventoRoutes);
@@ -19,5 +20,6 @@ router.use('/talleres', tallerRoutes);
 router.use('/asociaciones', asociacionesRoutes);
 router.use('/afiliaciones', afiliacionesRoutes);
 router.use('/usuarios', usuarioRoutes);
+router.use('/inscripciones', inscripcionRoutes);
 
 module.exports = router;
