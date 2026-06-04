@@ -30,7 +30,7 @@ app.use(cookieParser());
 app.use(mongoSanitize());
 
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("🟢 Conectado a MongoDB Local"))
   .catch((err) => console.error("🔴 Error conectando a MongoDB:", err));
 
