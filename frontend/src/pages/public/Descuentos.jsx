@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getDescuentos } from '../../api/descuentos';
+import FiltroBusqueda from '../../components/FiltroBusqueda';
 
 const formatearFecha = (fechaStr) =>
   new Date(fechaStr).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -16,12 +17,13 @@ const calcularVencimiento = (fechaStr) => {
   return { texto: `Vence el ${formatearFecha(fechaStr)}`, color: 'text-gray-400', bg: 'bg-gray-50 border-gray-200' };
 };
 
+const FILTROS_INICIALES = { texto: '', fechaDesde: '', fechaHasta: '', categoria: '', ubicacion: '' };
+
 export default function Descuentos() {
   const [descuentos, setDescuentos]   = useState([]);
   const [loading, setLoading]         = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [soloVigentes, setSoloVigentes] = useState(true);
-  const [copiado, setCopiado]         = useState(null); // _id del descuento cuyo código se copió
+  const [filtros, setFiltros]         = useState(FILTROS_INICIALES);
+  const [copiado, setCopiado]         = useState(null);
 
   useEffect(() => {
     const fetch_ = async () => {
@@ -38,15 +40,27 @@ export default function Descuentos() {
     fetch_();
   }, []);
 
+  const handleFilter = useCallback((nuevos) => setFiltros(nuevos), []);
+
+  const categorias = useMemo(
+    () => [...new Set(descuentos.map(d => d.comercio).filter(Boolean))].sort(),
+    [descuentos]
+  );
+
   const descuentosFiltrados = useMemo(() => {
-    const ahora = new Date();
-    const q = searchQuery.toLowerCase();
+    const q = filtros.texto.toLowerCase();
+    const desde = filtros.fechaDesde ? new Date(filtros.fechaDesde) : null;
+    const hasta = filtros.fechaHasta ? new Date(filtros.fechaHasta + 'T23:59:59') : null;
+
     return descuentos.filter((d) => {
-      const matchTexto   = `${d.titulo} ${d.comercio} ${d.descripcion}`.toLowerCase().includes(q);
-      const matchVigente = !soloVigentes || new Date(d.fecha_expiracion) >= ahora;
-      return matchTexto && matchVigente;
+      const matchTexto = !q || `${d.titulo} ${d.comercio} ${d.descripcion}`.toLowerCase().includes(q);
+      const expira = new Date(d.fecha_expiracion);
+      const matchDesde = !desde || expira >= desde;
+      const matchHasta = !hasta || expira <= hasta;
+      const matchCat   = !filtros.categoria || d.comercio === filtros.categoria;
+      return matchTexto && matchDesde && matchHasta && matchCat;
     });
-  }, [descuentos, searchQuery, soloVigentes]);
+  }, [descuentos, filtros]);
 
   const copiarCodigo = (descuento) => {
     navigator.clipboard.writeText(descuento.codigo_promocional).then(() => {
@@ -66,40 +80,29 @@ export default function Descuentos() {
   return (
     <main className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
 
-      {/* Cabecera + Buscador */}
+      {/* Cabecera */}
       <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
         <h1 className="text-3xl md:text-4xl font-extrabold text-[#243e7b] tracking-tight mb-4">
           Descuentos y Beneficios
         </h1>
-        <p className="text-gray-500 mb-8 max-w-2xl">
+        <p className="text-gray-500 max-w-2xl">
           Aprovecha los beneficios exclusivos para la comunidad estudiantil. Presenta tu carné y disfruta de descuentos en comercios aliados.
         </p>
-        <div className="relative w-full max-w-2xl">
-          <input
-            type="text"
-            placeholder="Buscar por nombre, comercio o descripción..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#5cc0b6] focus:ring-4 focus:ring-[#5cc0b6]/20 transition-all text-gray-700 placeholder-gray-400 font-medium shadow-inner"
-          />
-          <svg className="w-6 h-6 text-gray-400 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
       </div>
 
-      {/* Fila de filtros */}
-      <div className="flex flex-wrap items-center gap-3 px-1">
-        <label className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#5cc0b6] transition-all select-none">
-          <input
-            type="checkbox"
-            checked={soloVigentes}
-            onChange={(e) => setSoloVigentes(e.target.checked)}
-            className="w-4 h-4 accent-[#5cc0b6]"
-          />
-          <span className="text-sm font-semibold text-gray-700">Solo vigentes</span>
-        </label>
+      {/* Buscador avanzado */}
+      <FiltroBusqueda
+        onFilter={handleFilter}
+        categorias={categorias}
+        mostrarFecha
+        mostrarCategoria
+        mostrarUbicacion={false}
+        placeholderTexto="Buscar por nombre, comercio o descripción..."
+        labelCategoria="Comercio"
+      />
 
+      {/* Contador */}
+      <div className="flex items-center px-1">
         <span className="ml-auto text-sm font-semibold text-gray-400">
           <span className="text-[#243e7b]">{descuentosFiltrados.length}</span> de {descuentos.length} descuentos
         </span>
@@ -119,7 +122,6 @@ export default function Descuentos() {
               >
                 {/* Zona superior: logo + valor */}
                 <div className="relative flex flex-col items-center pt-7 pb-5 px-6 bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
-                  {/* Logo del comercio */}
                   <div className="w-20 h-20 rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden flex items-center justify-center p-2 mb-4">
                     <img
                       src={desc.imagen_url}
@@ -128,7 +130,6 @@ export default function Descuentos() {
                     />
                   </div>
 
-                  {/* Valor del descuento — el dato estrella */}
                   <div className="px-5 py-2 bg-[#9ce694]/20 border border-[#9ce694]/40 rounded-2xl">
                     <span className="text-2xl font-black text-emerald-800 tracking-tight">
                       {desc.valor_descuento}
@@ -150,7 +151,6 @@ export default function Descuentos() {
                     </p>
                   </div>
 
-                  {/* Código promocional */}
                   {desc.codigo_promocional && (
                     <button
                       onClick={() => copiarCodigo(desc)}
@@ -171,7 +171,6 @@ export default function Descuentos() {
                     </button>
                   )}
 
-                  {/* Fecha de vencimiento */}
                   <div className={`mt-auto flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${venc.bg} ${venc.color}`}>
                     <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -189,10 +188,8 @@ export default function Descuentos() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">No se encontraron descuentos</h3>
-            <p className="text-gray-500">
-              {soloVigentes ? 'Prueba desactivando el filtro "Solo vigentes" para ver todos.' : 'Prueba modificando los términos de búsqueda.'}
-            </p>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">No se encontraron resultados</h3>
+            <p className="text-gray-500">Prueba modificando los términos de búsqueda.</p>
           </div>
         )}
       </div>

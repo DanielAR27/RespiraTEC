@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTalleres } from '../../../api/talleres';
+import FiltroBusqueda from '../../../components/FiltroBusqueda';
 
 const NIVEL_COLOR = {
   Principiante: 'bg-green-100 text-green-700',
@@ -11,12 +12,12 @@ const NIVEL_COLOR = {
 const formatearFecha = (fechaStr) =>
   new Date(fechaStr).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' });
 
+const FILTROS_INICIALES = { texto: '', fechaDesde: '', fechaHasta: '', categoria: '', ubicacion: '' };
+
 export default function Talleres() {
   const [talleres, setTalleres]       = useState([]);
   const [loading, setLoading]         = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterNivel, setFilterNivel] = useState('todos');
-  const [soloConCupo, setSoloConCupo] = useState(false);
+  const [filtros, setFiltros]         = useState(FILTROS_INICIALES);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,15 +35,33 @@ export default function Talleres() {
     fetch_();
   }, []);
 
+  const handleFilter = useCallback((nuevos) => setFiltros(nuevos), []);
+
+  const categorias = useMemo(
+    () => [...new Set(talleres.map(t => t.nivel).filter(Boolean))],
+    [talleres]
+  );
+  const ubicaciones = useMemo(
+    () => [...new Set(talleres.map(t => t.ubicacion).filter(Boolean))],
+    [talleres]
+  );
+
   const talleresFiltrados = useMemo(() => {
-    const q = searchQuery.toLowerCase();
+    const q = filtros.texto.toLowerCase();
+    const desde = filtros.fechaDesde ? new Date(filtros.fechaDesde) : null;
+    const hasta = filtros.fechaHasta ? new Date(filtros.fechaHasta + 'T23:59:59') : null;
+
     return talleres.filter((t) => {
-      const matchTexto  = `${t.titulo} ${t.instructor} ${t.descripcion} ${t.ubicacion}`.toLowerCase().includes(q);
-      const matchNivel  = filterNivel === 'todos' || t.nivel === filterNivel;
-      const matchCupo   = !soloConCupo || t.cupo_disponible > 0;
-      return matchTexto && matchNivel && matchCupo;
+      const matchTexto = !q || `${t.titulo} ${t.instructor} ${t.descripcion} ${t.ubicacion}`.toLowerCase().includes(q);
+      const inicio = new Date(t.fecha_inicio);
+      const fin    = new Date(t.fecha_fin);
+      const matchDesde = !desde || fin >= desde;
+      const matchHasta = !hasta || inicio <= hasta;
+      const matchCat   = !filtros.categoria || t.nivel === filtros.categoria;
+      const matchUbi   = !filtros.ubicacion || t.ubicacion === filtros.ubicacion;
+      return matchTexto && matchDesde && matchHasta && matchCat && matchUbi;
     });
-  }, [talleres, searchQuery, filterNivel, soloConCupo]);
+  }, [talleres, filtros]);
 
   if (loading) {
     return (
@@ -55,51 +74,31 @@ export default function Talleres() {
   return (
     <main className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
 
-      {/* Cabecera + Buscador */}
+      {/* Cabecera */}
       <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
         <h1 className="text-3xl md:text-4xl font-extrabold text-[#243e7b] tracking-tight mb-4">
           Talleres Disponibles
         </h1>
-        <p className="text-gray-500 mb-8 max-w-2xl">
+        <p className="text-gray-500 max-w-2xl">
           Aprende nuevas habilidades y amplía tu formación. Encuentra el taller que mejor se adapte a tus intereses y nivel.
         </p>
-        <div className="relative w-full max-w-2xl">
-          <input
-            type="text"
-            placeholder="Buscar por nombre, instructor, ubicación..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#5cc0b6] focus:ring-4 focus:ring-[#5cc0b6]/20 transition-all text-gray-700 placeholder-gray-400 font-medium shadow-inner"
-          />
-          <svg className="w-6 h-6 text-gray-400 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
       </div>
 
-      {/* Fila de filtros */}
-      <div className="flex flex-wrap items-center gap-3 px-1">
-        <select
-          value={filterNivel}
-          onChange={(e) => setFilterNivel(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 focus:outline-none focus:border-[#5cc0b6] focus:ring-2 focus:ring-[#5cc0b6]/20 transition-all"
-        >
-          <option value="todos">Todos los niveles</option>
-          <option value="Principiante">Principiante</option>
-          <option value="Intermedio">Intermedio</option>
-          <option value="Avanzado">Avanzado</option>
-        </select>
+      {/* Buscador avanzado */}
+      <FiltroBusqueda
+        onFilter={handleFilter}
+        categorias={categorias}
+        ubicaciones={ubicaciones}
+        mostrarFecha
+        mostrarCategoria
+        mostrarUbicacion
+        placeholderTexto="Buscar por nombre, instructor o descripción..."
+        labelCategoria="Nivel"
+        labelUbicacion="Ubicación"
+      />
 
-        <label className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#5cc0b6] transition-all select-none">
-          <input
-            type="checkbox"
-            checked={soloConCupo}
-            onChange={(e) => setSoloConCupo(e.target.checked)}
-            className="w-4 h-4 accent-[#5cc0b6]"
-          />
-          <span className="text-sm font-semibold text-gray-700">Solo con cupos disponibles</span>
-        </label>
-
+      {/* Contador */}
+      <div className="flex items-center px-1">
         <span className="ml-auto text-sm font-semibold text-gray-400">
           <span className="text-[#243e7b]">{talleresFiltrados.length}</span> de {talleres.length} talleres
         </span>
@@ -154,7 +153,6 @@ export default function Talleres() {
                   </div>
                 </div>
 
-                {/* Cupos */}
                 <div className="flex items-center justify-between text-xs mt-auto pt-1">
                   <span className={`font-bold ${taller.cupo_disponible === 0 ? 'text-red-500' : 'text-emerald-600'}`}>
                     {taller.cupo_disponible === 0 ? 'Agotado' : `${taller.cupo_disponible} cupos libres`}
@@ -163,7 +161,6 @@ export default function Talleres() {
                 </div>
               </div>
 
-              {/* Botón */}
               <div className="p-5 pt-0">
                 <button
                   onClick={() => navigate(`/talleres/${taller._id}`)}
@@ -185,7 +182,7 @@ export default function Talleres() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">No se encontraron talleres</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">No se encontraron resultados</h3>
             <p className="text-gray-500">Prueba modificando los filtros o revisa más tarde.</p>
           </div>
         )}

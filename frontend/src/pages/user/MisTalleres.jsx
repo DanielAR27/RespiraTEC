@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMisInscripciones } from '../../api/inscripciones';
+import { descargarCertificado } from '../../api/certificados';
 import { useAuth } from '../../context/AuthContext';
 
 const NIVEL_COLOR = {
@@ -264,8 +265,25 @@ const generarCertificado = (inscripcion, nombreUsuario) => {
 export default function MisTalleres() {
   const [inscripciones, setInscripciones] = useState([]);
   const [loading, setLoading]             = useState(true);
+  const [descargandoId, setDescargandoId] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const handleDescargarCertificado = async (taller) => {
+    const safe = (taller.titulo || 'certificado')
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-zA-Z0-9]+/g, '_')
+      .toLowerCase();
+    try {
+      setDescargandoId(taller._id);
+      await descargarCertificado(taller._id, `certificado_${safe}`);
+    } catch (err) {
+      alert(err.message || 'No se pudo descargar el certificado');
+    } finally {
+      setDescargandoId(null);
+    }
+  };
 
   useEffect(() => {
     const fetch_ = async () => {
@@ -387,13 +405,14 @@ export default function MisTalleres() {
 
                       {puedeCertificar && (
                         <button
-                          onClick={() => generarCertificado(inscripcion, user?.nombre)}
-                          className="px-4 py-2 bg-[#243e7b] hover:bg-[#1a2f60] text-white rounded-xl font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+                          onClick={() => handleDescargarCertificado(t)}
+                          disabled={descargandoId === t._id}
+                          className="px-4 py-2 bg-[#243e7b] hover:bg-[#1a2f60] disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                           </svg>
-                          Descargar certificado
+                          {descargandoId === t._id ? 'Generando...' : 'Descargar certificado'}
                         </button>
                       )}
 

@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'; // Para proteger 
 import Navbar from './components/Navbar';
 import Inicio from './pages/public/Inicio';
 import Eventos from './pages/public/Eventos';
+import EventoDetalle from './pages/public/EventoDetalle';
 import Descuentos from './pages/public/Descuentos';
 import Contacto from './pages/public/Contacto';
 import Login from './pages/auth/Login';
@@ -51,6 +52,7 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Inicio />} />
           <Route path="/eventos" element={<Eventos />} />
+          <Route path="/eventos/:id" element={<EventoDetalle />} />
           <Route path="/descuentos" element={<Descuentos />} />
           <Route path="/asociaciones" element={<Asociaciones />} />
           <Route path="/asociaciones/detalle/:id" element={<AsociacionDetalle />} />

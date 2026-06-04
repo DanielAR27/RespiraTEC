@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTaller } from '../../../api/talleres';
 import { getMisInscripciones, inscribirse, cancelarInscripcion } from '../../../api/inscripciones';
+import ModalPago from '../../../components/ModalPago';
+import FeedbackSection from '../../../components/FeedbackSection';
 
 const NIVEL_COLOR = {
   Principiante: 'bg-green-100 text-green-700',
@@ -27,6 +29,7 @@ export default function TallerDetalle() {
   const [toast, setToast]   = useState({ type: '', message: '' });
   const [modalInscribir, setModalInscribir] = useState(false);
   const [modalCancelar, setModalCancelar]   = useState(false);
+  const [modalPago, setModalPago]           = useState(false);
 
   const fetchTaller = async () => {
     try {
@@ -170,27 +173,38 @@ export default function TallerDetalle() {
 
     if (!miInscripcion) {
       const sinCupos = taller.cupo_disponible === 0;
+      const precio = Number(taller.precio) > 0 ? Number(taller.precio) : 5000;
       return (
-        <button
-          onClick={() => !sinCupos && setModalInscribir(true)}
-          disabled={sinCupos}
-          className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 ${
-            sinCupos
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-[#5cc0b6] hover:bg-[#4ab0a6] text-white shadow-sm hover:shadow-md'
-          }`}
-        >
-          {sinCupos ? (
-            'Cupos agotados'
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
-              Inscribirse
-            </>
+        <div className="space-y-2">
+          <button
+            onClick={() => !sinCupos && setModalPago(true)}
+            disabled={sinCupos}
+            className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 ${
+              sinCupos
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-[#5cc0b6] hover:bg-[#4ab0a6] text-white shadow-sm hover:shadow-md'
+            }`}
+          >
+            {sinCupos ? (
+              'Cupos agotados'
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Inscribirme y pagar · ₡{precio.toLocaleString('es-CR')}
+              </>
+            )}
+          </button>
+          {!sinCupos && (
+            <button
+              onClick={() => setModalInscribir(true)}
+              className="w-full py-2 px-4 rounded-xl text-xs font-semibold text-gray-500 hover:text-[#243e7b] hover:bg-gray-50 transition-colors"
+            >
+              Inscribirme sin pagar (demo)
+            </button>
           )}
-        </button>
+        </div>
       );
     }
 
@@ -358,6 +372,14 @@ export default function TallerDetalle() {
                 </div>
               </div>
             )}
+
+            {/* Feedback */}
+            <FeedbackSection
+              targetId={id}
+              targetTipo="Taller"
+              finalizado={tallerFinalizado}
+              usuarioInscrito={!!miInscripcion}
+            />
           </div>
 
           {/* — Columna derecha — */}
@@ -478,6 +500,23 @@ export default function TallerDetalle() {
           </div>
         </div>
       )}
+
+      {/* Modal de pago */}
+      <ModalPago
+        isOpen={modalPago}
+        onClose={() => setModalPago(false)}
+        monto={Number(taller.precio) > 0 ? Number(taller.precio) : 5000}
+        concepto={`Inscripción a ${taller.titulo}`}
+        onSuccess={async () => {
+          try {
+            await inscribirse(id);
+            setToast({ type: 'success', message: '¡Pago exitoso! Te has inscrito al taller.' });
+            await checkInscripcion();
+          } catch (err) {
+            setToast({ type: 'success', message: '¡Pago exitoso! (inscripción demo)' });
+          }
+        }}
+      />
 
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

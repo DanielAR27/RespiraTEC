@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getEventos } from '../../api/eventos';
+import FiltroBusqueda from '../../components/FiltroBusqueda';
 
 const TIPO_CONFIG = {
   gratis:        { label: 'Gratuito',       color: 'bg-green-100 text-green-700' },
@@ -18,12 +19,12 @@ const formatearPrecio = (tipo, precio) => {
   return `₡${Number(precio).toLocaleString('es-CR')}`;
 };
 
+const FILTROS_INICIALES = { texto: '', fechaDesde: '', fechaHasta: '', categoria: '', ubicacion: '' };
+
 export default function Eventos() {
   const [eventos, setEventos]         = useState([]);
   const [loading, setLoading]         = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterTipo, setFilterTipo]   = useState('todos');
-  const [soloProximos, setSoloProximos] = useState(false);
+  const [filtros, setFiltros]         = useState(FILTROS_INICIALES);
 
   useEffect(() => {
     const fetch_ = async () => {
@@ -40,16 +41,34 @@ export default function Eventos() {
     fetch_();
   }, []);
 
+  const handleFilter = useCallback((nuevos) => setFiltros(nuevos), []);
+
+  const categorias = useMemo(
+    () => [...new Set(eventos.map(e => TIPO_CONFIG[e.tipo]?.label || e.tipo).filter(Boolean))],
+    [eventos]
+  );
+  const ubicaciones = useMemo(
+    () => [...new Set(eventos.map(e => e.ubicacion).filter(Boolean))],
+    [eventos]
+  );
+
   const eventosFiltrados = useMemo(() => {
-    const ahora = new Date();
-    const q = searchQuery.toLowerCase();
+    const q = filtros.texto.toLowerCase();
+    const desde = filtros.fechaDesde ? new Date(filtros.fechaDesde) : null;
+    const hasta = filtros.fechaHasta ? new Date(filtros.fechaHasta + 'T23:59:59') : null;
+
     return eventos.filter((e) => {
-      const matchTexto    = `${e.titulo} ${e.descripcion} ${e.ubicacion}`.toLowerCase().includes(q);
-      const matchTipo     = filterTipo === 'todos' || e.tipo === filterTipo;
-      const matchProximos = !soloProximos || new Date(e.fecha_fin) >= ahora;
-      return matchTexto && matchTipo && matchProximos;
+      const matchTexto = !q || `${e.titulo} ${e.descripcion} ${e.ubicacion}`.toLowerCase().includes(q);
+      const inicio = new Date(e.fecha_inicio);
+      const fin    = new Date(e.fecha_fin);
+      const matchDesde = !desde || fin >= desde;
+      const matchHasta = !hasta || inicio <= hasta;
+      const tipoLabel  = TIPO_CONFIG[e.tipo]?.label || e.tipo;
+      const matchCat   = !filtros.categoria || tipoLabel === filtros.categoria;
+      const matchUbi   = !filtros.ubicacion || e.ubicacion === filtros.ubicacion;
+      return matchTexto && matchDesde && matchHasta && matchCat && matchUbi;
     });
-  }, [eventos, searchQuery, filterTipo, soloProximos]);
+  }, [eventos, filtros]);
 
   if (loading) {
     return (
@@ -62,51 +81,31 @@ export default function Eventos() {
   return (
     <main className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
 
-      {/* Cabecera + Buscador */}
+      {/* Cabecera */}
       <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
         <h1 className="text-3xl md:text-4xl font-extrabold text-[#243e7b] tracking-tight mb-4">
           Próximos Eventos
         </h1>
-        <p className="text-gray-500 mb-8 max-w-2xl">
+        <p className="text-gray-500 max-w-2xl">
           Entérate de todos los eventos universitarios. Encuentra actividades académicas, culturales y sociales de tu comunidad.
         </p>
-        <div className="relative w-full max-w-2xl">
-          <input
-            type="text"
-            placeholder="Buscar por nombre, descripción o ubicación..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#5cc0b6] focus:ring-4 focus:ring-[#5cc0b6]/20 transition-all text-gray-700 placeholder-gray-400 font-medium shadow-inner"
-          />
-          <svg className="w-6 h-6 text-gray-400 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
       </div>
 
-      {/* Fila de filtros */}
-      <div className="flex flex-wrap items-center gap-3 px-1">
-        <select
-          value={filterTipo}
-          onChange={(e) => setFilterTipo(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 focus:outline-none focus:border-[#5cc0b6] focus:ring-2 focus:ring-[#5cc0b6]/20 transition-all"
-        >
-          <option value="todos">Todos los tipos</option>
-          <option value="gratis">Gratuitos</option>
-          <option value="pago_interno">Pago interno</option>
-          <option value="pago_terceros">Pago externo</option>
-        </select>
+      {/* Buscador avanzado */}
+      <FiltroBusqueda
+        onFilter={handleFilter}
+        categorias={categorias}
+        ubicaciones={ubicaciones}
+        mostrarFecha
+        mostrarCategoria
+        mostrarUbicacion
+        placeholderTexto="Buscar por nombre, descripción o ubicación..."
+        labelCategoria="Tipo"
+        labelUbicacion="Ubicación"
+      />
 
-        <label className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#5cc0b6] transition-all select-none">
-          <input
-            type="checkbox"
-            checked={soloProximos}
-            onChange={(e) => setSoloProximos(e.target.checked)}
-            className="w-4 h-4 accent-[#5cc0b6]"
-          />
-          <span className="text-sm font-semibold text-gray-700">Solo vigentes</span>
-        </label>
-
+      {/* Contador */}
+      <div className="flex items-center px-1">
         <span className="ml-auto text-sm font-semibold text-gray-400">
           <span className="text-[#243e7b]">{eventosFiltrados.length}</span> de {eventos.length} eventos
         </span>
@@ -133,11 +132,9 @@ export default function Eventos() {
                     alt={evento.titulo}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  {/* Badge de tipo */}
                   <span className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold shadow-sm ${tipoConfig.color}`}>
                     {tipoConfig.label}
                   </span>
-                  {/* Badge de estado temporal */}
                   {finalizado && (
                     <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold bg-gray-600 text-white shadow-sm">
                       Finalizado
@@ -176,7 +173,6 @@ export default function Eventos() {
                     </div>
                   </div>
 
-                  {/* Precio + cupos */}
                   <div className="flex items-center justify-between text-xs mt-auto pt-1">
                     <span className={`font-bold ${evento.tipo === 'gratis' ? 'text-emerald-600' : 'text-[#243e7b]'}`}>
                       {formatearPrecio(evento.tipo, evento.precio)}
@@ -189,7 +185,6 @@ export default function Eventos() {
                   </div>
                 </div>
 
-                {/* Botón */}
                 <div className="p-5 pt-0">
                   <a
                     href={`/eventos/${evento._id}`}
@@ -212,7 +207,7 @@ export default function Eventos() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">No se encontraron eventos</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">No se encontraron resultados</h3>
             <p className="text-gray-500">Prueba modificando los filtros o revisa más tarde.</p>
           </div>
         )}
