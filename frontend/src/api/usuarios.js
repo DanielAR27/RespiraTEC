@@ -42,7 +42,7 @@ export const updatePerfil = async (formData) => {
       method: 'PUT',
       body: formData,
       credentials: 'include'
-      // Nota: No se define 'Content-Type' cabecera ya que el navegador la define automáticamente con el límite del multipart/form-data
+      // El navegador define automáticamente la cabecera 'Content-Type' con el límite del multipart/form-data
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));

@@ -22,7 +22,7 @@ exports.crearTaller = async (req, res) => {
     const dataTaller = {
       ...req.body,
       imagen_url: req.file.path, // Guarda el enlace directo de Cloudinary
-      // Nota: cupo_disponible se inicializa automáticamente al valor de cupo_maximo 
+      // El campo cupo_disponible se inicializa automáticamente con el valor de cupo_maximo 
       // gracias al middleware pre('save') que se definió en el modelo.
     };
 

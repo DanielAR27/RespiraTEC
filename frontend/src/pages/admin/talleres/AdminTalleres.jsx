@@ -110,7 +110,7 @@ export default function AdminTalleres() {
   // MOTOR DE BÚSQUEDA Y FILTRADO EN TIEMPO REAL
   const talleresFiltrados = useMemo(() => {
     return talleres.filter((taller) => {
-      // Se formatean fechas para que el buscador pueda hacer match con texto
+      // Se formatean las fechas para permitir coincidencias de texto en el buscador
       const fInicioStr = new Date(taller.fecha_inicio).toLocaleDateString('es-CR', {
         day: 'numeric', month: 'long', year: 'numeric'
       }).toLowerCase();

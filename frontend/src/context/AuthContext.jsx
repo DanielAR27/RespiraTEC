@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Se exponen los datos y funciones para que cualquier componente los use
+  // Datos y funciones expuestas al proveedor de contexto
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, isLoading, setUser, setIsAuthenticated }}>
       {children}
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// 3. Creamos un Hook personalizado para no tener que importar useContext siempre
+// 3. Hook personalizado para facilitar el uso del contexto
 export const useAuth = () => {
   return useContext(AuthContext);
 };

@@ -63,7 +63,7 @@ export default function AdminEventos() {
     try {
       await deleteEvento(eventToDelete._id);
 
-      // Hacemos scroll al inicio para mostrar el toast correctamente
+      // Desplaza la vista al inicio para mostrar la notificación correctamente
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setSuccessToast(`Se ha eliminado el evento "${eventToDelete.titulo}" exitosamente`);
 
@@ -113,7 +113,7 @@ export default function AdminEventos() {
   // MOTOR DE BÚSQUEDA Y FILTRADO EN TIEMPO REAL
   const eventosFiltrados = useMemo(() => {
     return eventos.filter((evento) => {
-      // Se formatean fechas para que el buscador pueda hacer match con texto (ej: "mayo", "2026")
+      // Se formatean las fechas para permitir coincidencias de texto en el buscador (ej: "mayo", "2026")
       const fInicioStr = new Date(evento.fecha_inicio).toLocaleDateString('es-CR', {
         day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
       }).toLowerCase();

@@ -58,7 +58,7 @@ const tallerSchema = new mongoose.Schema({
     type: Date,
     required: [true, 'La fecha de finalización global del taller es obligatoria']
   },
-  // Aquí inyectamos el subesquema de horarios recurrentes
+  // Subesquema de horarios recurrentes
   horario_semanal: {
     type: [horarioSesionSchema],
     validate: [v => Array.isArray(v) && v.length > 0, 'El taller debe tener al menos un día y hora de clase asignado']

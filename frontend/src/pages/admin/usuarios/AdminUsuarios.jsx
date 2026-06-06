@@ -24,7 +24,7 @@ export default function AdminUsuarios() {
   const fetchUsuarios = async () => {
     setLoading(true);
     try {
-      const res = await getTodosUsuarios(''); // Traemos todos de una vez
+      const res = await getTodosUsuarios(''); // Obtiene todos los registros
       if (res.success) {
         setUsuarios(res.data || []);
       }

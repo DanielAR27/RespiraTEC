@@ -34,7 +34,7 @@ exports.login = async (req, res) => {
     const cookieOptions = {
       expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 día
       httpOnly: true, // Bloquea acceso desde JavaScript (Previene XSS)
-      sameSite: 'strict', // Previene ataques CSRF
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict', // Permite cross-site en prod
       secure: process.env.NODE_ENV === 'production' // Solo viaja por HTTPS en producción
     };
 
@@ -93,7 +93,7 @@ exports.register = async (req, res) => {
       role: 'user'
     });
 
-    // Enviar solo la respuesta (sin cookie de autenticación para que el usuario inicie sesión manualmente)
+    // Respuesta sin cookie de autenticación; requiere inicio de sesión manual
     res.status(201).json({
       success: true,
       mensaje: 'Usuario registrado exitosamente. Por favor inicie sesión.',
@@ -113,11 +113,11 @@ exports.register = async (req, res) => {
 // @desc    Cerrar sesión / Limpiar la cookie de autenticación
 // @route   POST /api/auth/logout
 exports.logout = async (req, res) => {
-  // Al usar httpOnly, React NO puede borrar la cookie. El backend debe sobreescribirla con una vacía y expirada.
+  // Las cookies httpOnly no pueden ser eliminadas desde el cliente. Se sobrescriben con una cookie vacía y expirada.
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000), // Expira en 10 segundos
     httpOnly: true,
-    sameSite: 'strict',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
     secure: process.env.NODE_ENV === 'production'
   });
 

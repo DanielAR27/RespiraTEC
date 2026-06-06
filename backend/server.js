@@ -7,14 +7,19 @@ const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 const cookieParser = require("cookie-parser");
 
-// Importas un solo archivo: tu Router Central
+// Router Central
 const apiRoutes = require("./routes/index");
 
 const app = express();
 
 app.use(helmet());
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost", "http://localhost:80"],
+  origin: [
+    "http://localhost:5173", 
+    "http://localhost", 
+    "http://localhost:80",
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],

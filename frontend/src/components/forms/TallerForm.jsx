@@ -146,7 +146,7 @@ export default function TallerForm({ initialData = null, onSubmit, onCancel, isS
       data.append(key, formData[key]);
     });
     
-    // Anexar horarios como un string JSON para que el backend lo parsee como arreglo de objetos
+    // Se anexan los horarios como string JSON para su posterior conversión a arreglo de objetos en el servidor
     data.append('horario_semanal', JSON.stringify(horarios));
 
     if (imagen) {

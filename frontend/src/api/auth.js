@@ -47,7 +47,7 @@ export const logout = async () => {
   try {
     const response = await fetch(`${API_URL}/auth/logout`, {
       method: 'POST',
-      credentials: 'include', // Envía la cookie actual para que el backend la destruya
+      credentials: 'include', // Se envía la cookie actual para su destrucción en el servidor
     });
 
     const data = await response.json();

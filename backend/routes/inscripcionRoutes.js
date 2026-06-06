@@ -14,7 +14,7 @@ router.use(proteger); // Todas las rutas de inscripciones requieren autenticaci�
 router.route('/')
   .post(inscribirse);
 
-// Debe ir antes de /:tallerId para que Express no lo confunda con un parámetro
+// Se define antes de /:tallerId para evitar conflictos de enrutamiento con parámetros
 router.get('/mis-inscripciones', misInscripciones);
 
 router.route('/:tallerId')

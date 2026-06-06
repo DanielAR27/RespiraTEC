@@ -16,7 +16,7 @@ router.use(proteger); // Todas las rutas requieren autenticación
 router.route('/')
   .post(asistirEvento);
 
-// Debe ir antes de /:eventoId para que Express no lo confunda con un parámetro
+// Se define antes de /:eventoId para evitar conflictos de enrutamiento con parámetros
 router.get('/mis-eventos', misEventos);
 router.get('/estado/:eventoId', estadoAsistencia);
 
