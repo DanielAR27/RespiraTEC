@@ -21,7 +21,7 @@
 
   <br />
 
-  [🌐 Funcionalidades](#-funcionalidades) · [🏗️ Arquitectura](#️-arquitectura) · [🚀 Inicio Rápido](#-inicio-rápido) · [📸 Capturas](#-capturas-de-pantalla)
+  [🌐 Funcionalidades](#-funcionalidades) · [🏗️ Arquitectura](#️-arquitectura) · [🚀 Inicio Rápido](#-inicio-rápido) · [📸 Vistas de la Plataforma](#-vistas-de-la-plataforma)
 
 </div>
 
