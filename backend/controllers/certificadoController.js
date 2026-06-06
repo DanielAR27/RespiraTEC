@@ -185,57 +185,64 @@ exports.descargarCertificado = async (req, res) => {
       doc
         .fillColor(COLOR_TEXT)
         .font('Helvetica-Bold')
-        .fontSize(12)
+        .fontSize(11)
         .text(value, x, detailsY + 16, {
           width: colWidth,
-          align: 'center'
+          align: 'center',
+          lineGap: 2
         });
     };
 
     drawDetail('Instructor', instructor, 0);
     drawDetail('Nivel', nivel, colWidth);
-    drawDetail('Período', `${fechaInicio} - ${fechaFin}`, colWidth * 2);
+    // Período: split into two lines so long dates don't overflow
+    drawDetail('Período', `${fechaInicio}\n${fechaFin}`, colWidth * 2);
 
-    const footerY = pageHeight - 90;
+    // Footer: leave enough room above the bottom bar (pageHeight - 12)
+    // Use pageHeight - 130 so there's ~118px of space for the footer content
+    const footerY = pageHeight - 130;
     doc
-      .moveTo(60, footerY)
-      .lineTo(pageWidth - 60, footerY)
+      .moveTo(60, footerY + 22)
+      .lineTo(pageWidth - 60, footerY + 22)
       .lineWidth(1)
       .strokeColor('#e5e7eb')
       .stroke();
 
+    // Signature line on the left
     doc
-      .moveTo(80, footerY + 40)
-      .lineTo(260, footerY + 40)
+      .moveTo(80, footerY + 64)
+      .lineTo(260, footerY + 64)
       .lineWidth(1)
       .strokeColor('#444444')
       .stroke();
     doc
-      .fillColor('#666666')
-      .font('Helvetica')
+      .fillColor('#555555')
+      .font('Helvetica-Bold')
       .fontSize(10)
-      .text(instructor, 80, footerY + 46, { width: 180, align: 'center' });
+      .text(instructor, 80, footerY + 70, { width: 180, align: 'center' });
     doc
-      .fillColor('#666666')
+      .fillColor('#888888')
+      .font('Helvetica')
       .fontSize(9)
-      .text('Instructor del Taller', 80, footerY + 60, {
+      .text('Instructor del Taller', 80, footerY + 85, {
         width: 180,
         align: 'center'
       });
 
+    // Emit date on the right
     doc
-      .fillColor('#aaaaaa')
+      .fillColor('#888888')
       .font('Helvetica')
       .fontSize(10)
-      .text(`Emitido el ${fechaEmision}`, pageWidth - 280, footerY + 46, {
-        width: 200,
+      .text(`Emitido el ${fechaEmision}`, pageWidth - 280, footerY + 60, {
+        width: 220,
         align: 'right'
       });
     doc
       .fillColor('#aaaaaa')
       .fontSize(9)
-      .text('RespiraTEC — Plataforma Estudiantil', pageWidth - 280, footerY + 60, {
-        width: 200,
+      .text('RespiraTEC — Plataforma Estudiantil', pageWidth - 280, footerY + 75, {
+        width: 220,
         align: 'right'
       });
 

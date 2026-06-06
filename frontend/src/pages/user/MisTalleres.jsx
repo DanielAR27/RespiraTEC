@@ -31,236 +31,255 @@ const generarCertificado = (inscripcion, nombreUsuario) => {
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Certificado — ${titulo}</title>
+  <title>Certificado - ${titulo}</title>
   <style>
+    @page { size: A4 landscape; margin: 12mm 14mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: Georgia, 'Times New Roman', serif;
-      background: #f0f0ea;
+      background: #f2f2ec;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 32px 16px;
-      min-height: 100vh;
+      padding: 24px 16px;
     }
     .no-print {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 18px;
       font-family: 'Trebuchet MS', sans-serif;
+      font-size: 13px;
       color: #555;
     }
-    .no-print p { margin-bottom: 10px; font-size: 14px; }
+    .no-print p { margin-bottom: 8px; }
     .btn-print {
-      padding: 10px 28px;
+      padding: 9px 26px;
       background: #243e7b;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 7px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
-      letter-spacing: 0.5px;
     }
     .btn-print:hover { background: #1a2f60; }
-    .certificate {
+
+    /* ── Certificado ── */
+    .cert-wrap {
       background: white;
-      width: 860px;
-      max-width: 100%;
-      padding: 64px 80px;
-      position: relative;
-      border: 3px solid #243e7b;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+      width: 100%;
+      max-width: 740px;
+      border: 2.5px solid #243e7b;
+      box-shadow: 0 4px 24px rgba(0,0,0,.13);
+      overflow: hidden;
     }
-    .certificate::before {
-      content: '';
-      display: block;
-      height: 8px;
-      background: linear-gradient(90deg, #243e7b, #5cc0b6);
-      position: absolute;
-      top: 0; left: 0; right: 0;
+    .bar { height: 7px; }
+    .bar-top    { background: linear-gradient(90deg, #243e7b, #5cc0b6); }
+    .bar-bottom { background: linear-gradient(90deg, #5cc0b6, #243e7b); }
+
+    .cert-body {
+      padding: 28px 48px 20px;
     }
-    .certificate::after {
-      content: '';
-      display: block;
-      height: 8px;
-      background: linear-gradient(90deg, #5cc0b6, #243e7b);
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-    }
-    .brand { text-align: center; margin-bottom: 36px; }
+
+    /* Marca */
+    .brand { text-align: center; margin-bottom: 14px; }
     .brand-name {
       font-family: 'Trebuchet MS', sans-serif;
-      font-size: 26px;
+      font-size: 22pt;
       font-weight: bold;
       color: #243e7b;
-      letter-spacing: 7px;
+      letter-spacing: 6px;
       text-transform: uppercase;
     }
     .brand-tagline {
       font-family: 'Trebuchet MS', sans-serif;
-      font-size: 11px;
+      font-size: 8pt;
       color: #5cc0b6;
       letter-spacing: 3px;
       text-transform: uppercase;
-      margin-top: 5px;
+      margin-top: 3px;
     }
     .divider {
-      width: 72px;
-      height: 2px;
+      width: 56px; height: 2px;
       background: linear-gradient(90deg, #243e7b, #5cc0b6);
-      margin: 14px auto;
+      margin: 8px auto 0;
     }
+
+    /* Tipo */
     .cert-type {
       text-align: center;
-      font-size: 32px;
+      font-size: 24pt;
       color: #1a2f60;
       text-transform: uppercase;
       letter-spacing: 3px;
       font-weight: normal;
-      margin-bottom: 6px;
+      margin: 10px 0 2px;
     }
     .cert-of {
       text-align: center;
       font-family: 'Trebuchet MS', sans-serif;
-      font-size: 12px;
+      font-size: 8pt;
       color: #888;
       text-transform: uppercase;
       letter-spacing: 2px;
-      margin-bottom: 36px;
+      margin-bottom: 12px;
     }
+
+    /* Recipiente */
     .granted-to {
       text-align: center;
-      font-size: 15px;
+      font-size: 10pt;
       color: #666;
       font-style: italic;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
     }
     .recipient {
       text-align: center;
-      font-size: 44px;
+      font-size: 28pt;
       color: #243e7b;
-      padding-bottom: 10px;
-      margin: 0 32px 10px;
+      padding-bottom: 6px;
+      margin: 0 20px 6px;
       border-bottom: 2px solid #5cc0b6;
     }
     .completion {
       text-align: center;
-      font-size: 15px;
+      font-size: 10pt;
       color: #666;
       font-style: italic;
-      margin-bottom: 14px;
+      margin-bottom: 4px;
     }
     .workshop-title {
       text-align: center;
-      font-size: 22px;
+      font-size: 13pt;
       font-weight: bold;
       color: #243e7b;
-      margin-bottom: 32px;
-      padding: 0 16px;
+      margin-bottom: 16px;
+      padding: 0 12px;
     }
+
+    /* ── Fila de detalles: 3 columnas iguales ── */
     .details {
-      display: flex;
-      justify-content: center;
-      gap: 48px;
-      flex-wrap: wrap;
-      margin-bottom: 44px;
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      margin-bottom: 14px;
     }
-    .detail { text-align: center; }
+    .detail {
+      display: table-cell;
+      width: 33.33%;
+      text-align: center;
+      vertical-align: top;
+      padding: 0 6px;
+    }
     .detail-label {
       font-family: 'Trebuchet MS', sans-serif;
-      font-size: 10px;
+      font-size: 7pt;
       color: #aaa;
       text-transform: uppercase;
       letter-spacing: 2px;
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 3px;
     }
     .detail-value {
-      font-size: 14px;
+      font-size: 10pt;
       color: #333;
       font-weight: bold;
+      line-height: 1.4;
+      display: block;
+      word-break: break-word;
     }
+
+    /* ── Pie de página ── */
     .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      padding-top: 24px;
-      border-top: 1px solid #e5e7eb;
-      margin-top: 8px;
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
     }
-    .sig-block { text-align: center; min-width: 180px; }
+    .footer-left { display: table-cell; width: 50%; vertical-align: bottom; }
+    .footer-right { display: table-cell; width: 50%; vertical-align: bottom; text-align: right; }
     .sig-line {
-      border-top: 1px solid #444;
-      padding-top: 8px;
+      display: inline-block;
+      border-top: 1px solid #777;
+      padding-top: 5px;
       font-family: 'Trebuchet MS', sans-serif;
-      font-size: 11px;
-      color: #666;
-      line-height: 1.6;
+      font-size: 8.5pt;
+      color: #555;
+      line-height: 1.5;
+      min-width: 150px;
     }
     .emit-date {
       font-family: 'Trebuchet MS', sans-serif;
-      font-size: 11px;
-      color: #aaa;
-      text-align: right;
-      line-height: 1.7;
+      font-size: 8.5pt;
+      color: #888;
+      line-height: 1.6;
     }
+
     @media print {
       body { background: white; padding: 0; }
       .no-print { display: none !important; }
-      .certificate { box-shadow: none; }
+      .cert-wrap { box-shadow: none; max-width: 100%; }
     }
   </style>
 </head>
 <body>
   <div class="no-print">
-    <p>Usa <strong>Ctrl+P</strong> o el botón de abajo para guardar como PDF.</p>
+    <p>Presiona <strong>Ctrl+P</strong> o el botón. En el diálogo elige orientación <strong>Horizontal</strong>.</p>
     <button class="btn-print" onclick="window.print()">Imprimir / Guardar PDF</button>
   </div>
-  <div class="certificate">
-    <div class="brand">
-      <div class="brand-name">RespiraTEC</div>
-      <div class="brand-tagline">Plataforma Estudiantil Universitaria</div>
-      <div class="divider"></div>
+
+  <div class="cert-wrap">
+    <div class="bar bar-top"></div>
+    <div class="cert-body">
+      <div class="brand">
+        <div class="brand-name">RespiraTEC</div>
+        <div class="brand-tagline">Plataforma Estudiantil Universitaria</div>
+        <div class="divider"></div>
+      </div>
+      <div class="cert-type">Certificado</div>
+      <div class="cert-of">de Participación</div>
+      <div class="granted-to">Se otorga el presente certificado a</div>
+      <div class="recipient">${nombre}</div>
+      <div class="completion">por haber completado satisfactoriamente el taller</div>
+      <div class="workshop-title">&ldquo;${titulo}&rdquo;</div>
+      <div class="details">
+        <div class="detail">
+          <span class="detail-label">Instructor</span>
+          <span class="detail-value">${instructor}</span>
+        </div>
+        <div class="detail">
+          <span class="detail-label">Nivel</span>
+          <span class="detail-value">${nivel}</span>
+        </div>
+        <div class="detail">
+          <span class="detail-label">Per&iacute;odo</span>
+          <span class="detail-value">${fechaInicio}<br/>${fechaFin}</span>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="footer-left">
+          <div class="sig-line">${instructor}<br/>Instructor del Taller</div>
+        </div>
+        <div class="footer-right">
+          <div class="emit-date">Emitido el ${fechaEmision}<br/>RespiraTEC &mdash; Plataforma Estudiantil</div>
+        </div>
+      </div>
     </div>
-    <div class="cert-type">Certificado</div>
-    <div class="cert-of">de Participación</div>
-    <div class="granted-to">Se otorga el presente certificado a</div>
-    <div class="recipient">${nombre}</div>
-    <div class="completion">por haber completado satisfactoriamente el taller</div>
-    <div class="workshop-title">&ldquo;${titulo}&rdquo;</div>
-    <div class="details">
-      <div class="detail">
-        <span class="detail-label">Instructor</span>
-        <span class="detail-value">${instructor}</span>
-      </div>
-      <div class="detail">
-        <span class="detail-label">Nivel</span>
-        <span class="detail-value">${nivel}</span>
-      </div>
-      <div class="detail">
-        <span class="detail-label">Período</span>
-        <span class="detail-value">${fechaInicio} &ndash; ${fechaFin}</span>
-      </div>
-    </div>
-    <div class="footer">
-      <div class="sig-block">
-        <div class="sig-line">${instructor}<br/>Instructor del Taller</div>
-      </div>
-      <div class="emit-date">
-        Emitido el ${fechaEmision}<br/>
-        RespiraTEC &mdash; Plataforma Estudiantil
-      </div>
-    </div>
+    <div class="bar bar-bottom"></div>
   </div>
 </body>
 </html>`;
 
-  const win = window.open('', '_blank', 'width=1000,height=750,scrollbars=yes');
+  const win = window.open('', '_blank', 'width=900,height=680,scrollbars=yes');
   if (win) {
     win.document.write(html);
     win.document.close();
   }
 };
+
+
+
 
 export default function MisTalleres() {
   const [inscripciones, setInscripciones] = useState([]);
@@ -351,7 +370,7 @@ export default function MisTalleres() {
                   className="flex flex-col sm:flex-row gap-4 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
                 >
                   {/* Imagen */}
-                  <div className="sm:w-36 h-32 sm:h-auto shrink-0 bg-gradient-to-br from-[#243e7b]/10 to-[#5cc0b6]/10 overflow-hidden rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none">
+                  <div className="sm:w-70 h-40 sm:h-auto shrink-0 bg-gradient-to-br from-[#243e7b]/10 to-[#5cc0b6]/10 overflow-hidden rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none">
                     <img
                       src={t.imagen_url}
                       alt={t.titulo}

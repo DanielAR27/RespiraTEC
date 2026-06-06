@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getEvento } from '../../api/eventos';
-import ModalPago from '../../components/ModalPago';
-import FeedbackSection from '../../components/FeedbackSection';
+import { getEvento } from '../../../api/eventos';
+import { asistirEvento, cancelarAsistenciaEvento, getEstadoAsistencia } from '../../../api/asistenciaEventos';
+import { useAuth } from '../../../context/AuthContext';
+import ModalPago from '../../../components/ModalPago';
+import FeedbackSection from '../../../components/FeedbackSection';
 
 const TIPO_CONFIG = {
   gratis:        { label: 'Gratuito',       color: 'bg-green-100 text-green-700' },
@@ -21,30 +23,101 @@ const formatearPrecio = (tipo, precio) => {
   return `₡${Number(precio).toLocaleString('es-CR')}`;
 };
 
+/* ─── Modal de confirmación genérico ─────────────────────────────── */
+function ModalConfirmacion({ isOpen, titulo, mensaje, onConfirmar, onCancelar, cargando }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancelar} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-fadeIn">
+        <div className="flex flex-col items-center text-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center">
+            <svg className="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-800">{titulo}</h3>
+            <p className="text-sm text-gray-500 mt-1">{mensaje}</p>
+          </div>
+          <div className="flex gap-3 w-full mt-2">
+            <button
+              onClick={onCancelar}
+              disabled={cargando}
+              className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              No
+            </button>
+            <button
+              onClick={onConfirmar}
+              disabled={cargando}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-[#243e7b] text-white font-bold text-sm hover:bg-[#1a2f5e] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {cargando
+                ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" /> Procesando...</>
+                : 'Sí'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function EventoDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
-  const [evento, setEvento]   = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
-  const [toast, setToast]     = useState({ type: '', message: '' });
-  const [modalPago, setModalPago] = useState(false);
+  const [evento, setEvento]             = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
+  const [toast, setToast]               = useState({ type: '', message: '' });
+  const [modalPago, setModalPago]       = useState(false);
 
+  // Estado de asistencia
+  const [asistiendo, setAsistiendo]     = useState(false);
+  const [accionCargando, setAccionCargando] = useState(false);
+  const [checkingAsist, setCheckingAsist]   = useState(false);
+
+  // Modal confirmación cancelar asistencia
+  const [modalCancelar, setModalCancelar]   = useState(false);
+  const [cancelCargando, setCancelCargando] = useState(false);
+
+  // Modal confirmación confirmar asistencia (gratis)
+  const [modalConfirmar, setModalConfirmar] = useState(false);
+
+  const fetchEvento = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await getEvento(id);
+      setEvento(res.data);
+    } catch {
+      setError('No se pudo cargar la información del evento.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => { fetchEvento(); }, [fetchEvento]);
+
+  // Verificar si el usuario ya está registrado
   useEffect(() => {
-    const fetchEvento = async () => {
+    if (!isAuthenticated || !id) return;
+    const checkAsistencia = async () => {
+      setCheckingAsist(true);
       try {
-        setLoading(true);
-        const res = await getEvento(id);
-        setEvento(res.data);
+        const res = await getEstadoAsistencia(id);
+        setAsistiendo(res.asistiendo);
       } catch {
-        setError('No se pudo cargar la información del evento.');
+        // Si falla (p.ej. no autenticado), simplemente no marca como asistiendo
       } finally {
-        setLoading(false);
+        setCheckingAsist(false);
       }
     };
-    fetchEvento();
-  }, [id]);
+    checkAsistencia();
+  }, [id, isAuthenticated]);
 
   useEffect(() => {
     if (!toast.message) return;
@@ -52,6 +125,44 @@ export default function EventoDetalle() {
     const t = setTimeout(() => setToast({ type: '', message: '' }), 5000);
     return () => clearTimeout(t);
   }, [toast.message]);
+
+  /* ── Handlers ─────────────────────────────────────── */
+  const handleAsistir = async () => {
+    setModalConfirmar(false);
+    setAccionCargando(true);
+    try {
+      const res = await asistirEvento(id);
+      setAsistiendo(true);
+      // Actualizar cupo disponible localmente
+      setEvento(prev => ({ ...prev, cupo_disponible: res.cupo_disponible }));
+      setToast({ type: 'success', message: '¡Listo! Tu asistencia quedó registrada.' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'No se pudo registrar tu asistencia.' });
+    } finally {
+      setAccionCargando(false);
+    }
+  };
+
+  const handleCancelarAsistencia = async () => {
+    setCancelCargando(true);
+    try {
+      const res = await cancelarAsistenciaEvento(id);
+      setAsistiendo(false);
+      setEvento(prev => ({ ...prev, cupo_disponible: res.cupo_disponible ?? (prev.cupo_disponible + 1) }));
+      setToast({ type: 'success', message: 'Cancelaste tu asistencia al evento.' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'No se pudo cancelar tu asistencia.' });
+    } finally {
+      setCancelCargando(false);
+      setModalCancelar(false);
+    }
+  };
+
+  const handlePagoExitoso = () => {
+    setAsistiendo(true);
+    setEvento(prev => ({ ...prev, cupo_disponible: Math.max(0, prev.cupo_disponible - 1) }));
+    setToast({ type: 'success', message: '¡Pago exitoso! Te esperamos en el evento.' });
+  };
 
   if (loading) {
     return (
@@ -102,6 +213,53 @@ export default function EventoDetalle() {
       );
     }
 
+    // Si no está autenticado
+    if (!isAuthenticated) {
+      return (
+        <button
+          onClick={() => navigate('/login')}
+          className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-[#243e7b] text-white hover:bg-[#1a2f5e] transition-colors flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
+          Inicia sesión para asistir
+        </button>
+      );
+    }
+
+    // Cargando estado de asistencia
+    if (checkingAsist) {
+      return (
+        <div className="w-full py-3 px-4 rounded-xl bg-gray-50 flex items-center justify-center gap-2">
+          <span className="w-4 h-4 border-2 border-[#5cc0b6]/30 border-t-[#5cc0b6] rounded-full animate-spin inline-block" />
+          <span className="text-sm text-gray-400">Verificando...</span>
+        </div>
+      );
+    }
+
+    // Ya está asistiendo
+    if (asistiendo) {
+      return (
+        <div className="space-y-2">
+          <div className="w-full py-3 px-4 rounded-xl bg-green-50 border border-green-200 flex items-center justify-center gap-2">
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-bold text-green-700">¡Ya estás inscrito!</span>
+          </div>
+          <button
+            onClick={() => setModalCancelar(true)}
+            disabled={cancelCargando}
+            className="w-full py-2 px-4 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-50 border border-red-100 transition-colors disabled:opacity-50"
+          >
+            Cancelar asistencia
+          </button>
+        </div>
+      );
+    }
+
     if (sinCupos) {
       return (
         <div className="text-center py-3 px-4 bg-red-50 rounded-xl text-red-600 text-sm font-bold">
@@ -114,7 +272,8 @@ export default function EventoDetalle() {
       return (
         <button
           onClick={() => setModalPago(true)}
-          className="w-full py-3 px-4 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 bg-[#5cc0b6] hover:bg-[#4ab0a6] text-white shadow-sm hover:shadow-md"
+          disabled={accionCargando}
+          className="w-full py-3 px-4 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 bg-[#5cc0b6] hover:bg-[#4ab0a6] text-white shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -126,13 +285,19 @@ export default function EventoDetalle() {
 
     return (
       <button
-        onClick={() => setToast({ type: 'success', message: '¡Listo! Te esperamos en el evento.' })}
-        className="w-full py-3 px-4 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 bg-[#5cc0b6] hover:bg-[#4ab0a6] text-white shadow-sm hover:shadow-md"
+        onClick={() => setModalConfirmar(true)}
+        disabled={accionCargando}
+        className="w-full py-3 px-4 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 bg-[#5cc0b6] hover:bg-[#4ab0a6] text-white shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-        Asistiré (gratis)
+        {accionCargando
+          ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" /> Registrando...</>
+          : <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Asistiré (gratis)
+            </>
+        }
       </button>
     );
   };
@@ -173,11 +338,12 @@ export default function EventoDetalle() {
           </div>
         )}
 
-        <div className="w-full h-64 md:h-80 rounded-3xl overflow-hidden bg-gradient-to-br from-[#243e7b]/10 to-[#5cc0b6]/10">
+        {/* Imagen del evento estilo banner, ajustando ligeramente la posición vertical */}
+        <div className="w-full h-64 md:h-96 rounded-3xl overflow-hidden shadow-md border border-gray-100">
           <img
             src={evento.imagen_url}
             alt={evento.titulo}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-[center_20%]"
           />
         </div>
 
@@ -250,7 +416,7 @@ export default function EventoDetalle() {
               targetId={id}
               targetTipo="Evento"
               finalizado={finalizado}
-              usuarioInscrito={true}
+              usuarioInscrito={asistiendo}
             />
           </div>
 
@@ -266,7 +432,7 @@ export default function EventoDetalle() {
               <div className="mb-4">
                 <div className="w-full bg-gray-100 rounded-full h-2">
                   <div
-                    className="h-2 rounded-full bg-[#5cc0b6] transition-all"
+                    className="h-2 rounded-full bg-[#5cc0b6] transition-all duration-500"
                     style={{ width: `${Math.max(4, ((evento.cupo_maximo - evento.cupo_disponible) / evento.cupo_maximo) * 100)}%` }}
                   />
                 </div>
@@ -293,7 +459,27 @@ export default function EventoDetalle() {
         onClose={() => setModalPago(false)}
         monto={Number(evento.precio) > 0 ? Number(evento.precio) : 0}
         concepto={`Entrada para ${evento.titulo}`}
-        onSuccess={() => setToast({ type: 'success', message: '¡Pago exitoso! Te esperamos en el evento.' })}
+        onSuccess={handlePagoExitoso}
+      />
+
+      {/* Modal confirmar asistencia gratuita */}
+      <ModalConfirmacion
+        isOpen={modalConfirmar}
+        titulo="Confirmar asistencia"
+        mensaje={`¿Deseas registrar tu asistencia al evento "${evento.titulo}"?`}
+        onConfirmar={handleAsistir}
+        onCancelar={() => setModalConfirmar(false)}
+        cargando={accionCargando}
+      />
+
+      {/* Modal cancelar asistencia */}
+      <ModalConfirmacion
+        isOpen={modalCancelar}
+        titulo="Cancelar asistencia"
+        mensaje="¿Estás seguro de que deseas dejar de asistir a este evento?"
+        onConfirmar={handleCancelarAsistencia}
+        onCancelar={() => setModalCancelar(false)}
+        cargando={cancelCargando}
       />
     </>
   );

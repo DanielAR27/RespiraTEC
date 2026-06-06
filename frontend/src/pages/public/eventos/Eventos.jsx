@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { getEventos } from '../../api/eventos';
-import FiltroBusqueda from '../../components/FiltroBusqueda';
+import { getEventos } from '../../../api/eventos';
+import FiltroBusqueda from '../../../components/FiltroBusqueda';
 
 const TIPO_CONFIG = {
   gratis:        { label: 'Gratuito',       color: 'bg-green-100 text-green-700' },

@@ -14,6 +14,48 @@ const NIVEL_COLOR = {
 const formatearFechaLarga = (fechaStr) =>
   new Date(fechaStr).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' });
 
+/* ─── Modal de confirmación genérico ─────────────────────────────── */
+function ModalConfirmacion({ isOpen, titulo, mensaje, onConfirmar, onCancelar, cargando }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancelar} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-fadeIn">
+        <div className="flex flex-col items-center text-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center">
+            <svg className="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-800">{titulo}</h3>
+            <p className="text-sm text-gray-500 mt-1">{mensaje}</p>
+          </div>
+          <div className="flex gap-3 w-full mt-2">
+            <button
+              onClick={onCancelar}
+              disabled={cargando}
+              className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              No
+            </button>
+            <button
+              onClick={onConfirmar}
+              disabled={cargando}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-[#243e7b] text-white font-bold text-sm hover:bg-[#1a2f5e] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {cargando
+                ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" /> Procesando...</>
+                : 'Sí'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TallerDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -74,7 +116,8 @@ export default function TallerDetalle() {
       await inscribirse(id);
       setToast({ type: 'success', message: '¡Te has inscrito al taller exitosamente!' });
       setModalInscribir(false);
-      await checkInscripcion();
+      setMiInscripcion({ usuario: 'me', taller: id });
+      setTaller(prev => ({ ...prev, cupo_disponible: Math.max(0, prev.cupo_disponible - 1) }));
     } catch (err) {
       setToast({ type: 'error', message: err.message || 'Error al inscribirse' });
       setModalInscribir(false);
@@ -89,7 +132,8 @@ export default function TallerDetalle() {
       await cancelarInscripcion(id);
       setToast({ type: 'success', message: 'Tu inscripción ha sido cancelada.' });
       setModalCancelar(false);
-      await checkInscripcion();
+      setMiInscripcion(null);
+      setTaller(prev => ({ ...prev, cupo_disponible: prev.cupo_disponible + 1 }));
     } catch (err) {
       setToast({ type: 'error', message: err.message || 'Error al cancelar la inscripción' });
       setModalCancelar(false);
@@ -146,7 +190,7 @@ export default function TallerDetalle() {
     if (tallerFinalizado) {
       return miInscripcion ? (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-bold text-sm">
+          <div className="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-bold text-sm">
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
@@ -171,60 +215,55 @@ export default function TallerDetalle() {
       );
     }
 
-    if (!miInscripcion) {
-      const sinCupos = taller.cupo_disponible === 0;
-      const precio = Number(taller.precio) > 0 ? Number(taller.precio) : 5000;
+    // Ya está inscrito
+    if (miInscripcion) {
       return (
         <div className="space-y-2">
+          <div className="w-full py-3 px-4 rounded-xl bg-green-50 border border-green-200 flex items-center justify-center gap-2">
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-bold text-green-700">¡Ya estás inscrito!</span>
+          </div>
           <button
-            onClick={() => !sinCupos && setModalPago(true)}
-            disabled={sinCupos}
-            className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 ${
-              sinCupos
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-[#5cc0b6] hover:bg-[#4ab0a6] text-white shadow-sm hover:shadow-md'
-            }`}
+            onClick={() => setModalCancelar(true)}
+            disabled={actionLoading}
+            className="w-full py-2 px-4 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-50 border border-red-100 transition-colors disabled:opacity-50"
           >
-            {sinCupos ? (
-              'Cupos agotados'
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                Inscribirme y pagar · ₡{precio.toLocaleString('es-CR')}
-              </>
-            )}
+            Cancelar inscripción
           </button>
-          {!sinCupos && (
-            <button
-              onClick={() => setModalInscribir(true)}
-              className="w-full py-2 px-4 rounded-xl text-xs font-semibold text-gray-500 hover:text-[#243e7b] hover:bg-gray-50 transition-colors"
-            >
-              Inscribirme sin pagar (demo)
-            </button>
-          )}
         </div>
       );
     }
 
-    // Inscrito y taller no finalizado
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 px-4 py-3 bg-[#243e7b]/10 border border-[#243e7b]/20 rounded-xl text-[#243e7b] font-bold text-sm">
-          <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-          </svg>
-          Estás inscrito
+    const sinCupos = taller.cupo_disponible === 0;
+    if (sinCupos) {
+      return (
+        <div className="text-center py-3 px-4 bg-red-50 rounded-xl text-red-600 text-sm font-bold">
+          Cupos agotados
         </div>
+      );
+    }
+
+    const precio = Number(taller.precio) > 0 ? Number(taller.precio) : 5000;
+    return (
+      <div className="space-y-2">
         <button
-          onClick={() => setModalCancelar(true)}
-          className="w-full py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+          onClick={() => setModalPago(true)}
+          disabled={actionLoading}
+          className="w-full py-3 px-4 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 bg-[#5cc0b6] hover:bg-[#4ab0a6] text-white shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          Cancelar inscripción
+          Inscribirme y pagar · ₡{precio.toLocaleString('es-CR')}
+        </button>
+        <button
+          onClick={() => setModalInscribir(true)}
+          disabled={actionLoading}
+          className="w-full py-2 px-4 rounded-xl text-xs font-semibold text-gray-500 hover:text-[#243e7b] hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          Inscribirme sin pagar (demo)
         </button>
       </div>
     );
@@ -269,11 +308,11 @@ export default function TallerDetalle() {
         )}
 
         {/* Banner de imagen */}
-        <div className="w-full h-64 md:h-80 rounded-3xl overflow-hidden bg-gradient-to-br from-[#243e7b]/10 to-[#5cc0b6]/10">
+        <div className="w-full h-64 md:h-96 rounded-3xl overflow-hidden shadow-md border border-gray-100">
           <img
             src={taller.imagen_url}
             alt={taller.titulo}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-[center_20%]"
           />
         </div>
 
@@ -423,83 +462,25 @@ export default function TallerDetalle() {
         </div>
       </main>
 
-      {/* Modal inscribirse */}
-      {modalInscribir && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-slideDownModal">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-16 h-16 bg-teal-50 text-[#5cc0b6] rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">¿Inscribirse al taller?</h3>
-                <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-                  ¿Confirmas tu inscripción a <strong className="text-gray-700">"{taller.titulo}"</strong>?
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 mt-8">
-              <button
-                onClick={() => setModalInscribir(false)}
-                disabled={actionLoading}
-                className="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
-              >
-                No, cancelar
-              </button>
-              <button
-                onClick={handleInscribirse}
-                disabled={actionLoading}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-[#5cc0b6] hover:bg-[#4ab0a6] transition-colors shadow-sm disabled:opacity-50"
-              >
-                {actionLoading
-                  ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  : 'Sí, inscribirme'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal inscribirse (demo) */}
+      <ModalConfirmacion
+        isOpen={modalInscribir}
+        titulo="Inscribirse al taller"
+        mensaje={`¿Confirmas tu inscripción a "${taller.titulo}"?`}
+        onConfirmar={handleInscribirse}
+        onCancelar={() => setModalInscribir(false)}
+        cargando={actionLoading}
+      />
 
       {/* Modal cancelar */}
-      {modalCancelar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-slideDownModal">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">¿Cancelar inscripción?</h3>
-                <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-                  ¿Estás seguro de cancelar tu inscripción a <strong className="text-gray-700">"{taller.titulo}"</strong>? Se liberará tu cupo.
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 mt-8">
-              <button
-                onClick={() => setModalCancelar(false)}
-                disabled={actionLoading}
-                className="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
-              >
-                No, volver
-              </button>
-              <button
-                onClick={handleCancelar}
-                disabled={actionLoading}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-sm disabled:opacity-50"
-              >
-                {actionLoading
-                  ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  : 'Sí, cancelar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ModalConfirmacion
+        isOpen={modalCancelar}
+        titulo="Cancelar inscripción"
+        mensaje={`¿Estás seguro de cancelar tu inscripción a "${taller.titulo}"? Se liberará tu cupo.`}
+        onConfirmar={handleCancelar}
+        onCancelar={() => setModalCancelar(false)}
+        cargando={actionLoading}
+      />
 
       {/* Modal de pago */}
       <ModalPago
@@ -510,11 +491,12 @@ export default function TallerDetalle() {
         onSuccess={async () => {
           try {
             await inscribirse(id);
-            setToast({ type: 'success', message: '¡Pago exitoso! Te has inscrito al taller.' });
-            await checkInscripcion();
-          } catch (err) {
-            setToast({ type: 'success', message: '¡Pago exitoso! (inscripción demo)' });
+          } catch {
+            // Ya inscrito o error; igualmente mostramos éxito
           }
+          setMiInscripcion({ usuario: 'me', taller: id });
+          setTaller(prev => ({ ...prev, cupo_disponible: Math.max(0, prev.cupo_disponible - 1) }));
+          setToast({ type: 'success', message: '¡Pago exitoso! Te has inscrito al taller.' });
         }}
       />
 

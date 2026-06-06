@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext'; // Para proteger rutas
 import Navbar from './components/Navbar';
 import Inicio from './pages/public/Inicio';
-import Eventos from './pages/public/Eventos';
-import EventoDetalle from './pages/public/EventoDetalle';
+import Eventos from './pages/public/eventos/Eventos';
+import EventoDetalle from './pages/public/eventos/EventoDetalle';
 import Descuentos from './pages/public/Descuentos';
 import Contacto from './pages/public/Contacto';
 import Login from './pages/auth/Login';

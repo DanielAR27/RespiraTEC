@@ -13,6 +13,7 @@ const usuarioRoutes = require('./usuarioRoutes');
 const inscripcionRoutes = require('./inscripcionRoutes');
 const certificadoRoutes = require('./certificadoRoutes');
 const feedbackRoutes = require('./feedbackRoutes');
+const asistenciaEventoRoutes = require('./asistenciaEventoRoutes');
 
 // Montar las rutas en sus respectivos "caminos"
 router.use('/eventos', eventoRoutes);
@@ -25,5 +26,6 @@ router.use('/usuarios', usuarioRoutes);
 router.use('/inscripciones', inscripcionRoutes);
 router.use('/certificados', certificadoRoutes);
 router.use('/feedback', feedbackRoutes);
+router.use('/asistencia-eventos', asistenciaEventoRoutes);
 
 module.exports = router;

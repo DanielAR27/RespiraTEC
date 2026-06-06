@@ -151,31 +151,33 @@ export default function Descuentos() {
                     </p>
                   </div>
 
-                  {desc.codigo_promocional && (
-                    <button
-                      onClick={() => copiarCodigo(desc)}
-                      className="flex items-center justify-between w-full px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-dashed border-gray-300 hover:border-[#5cc0b6] rounded-xl transition-all group/code"
-                      title="Clic para copiar el código"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        <span className="text-xs font-black text-gray-600 tracking-widest uppercase truncate">
-                          {desc.codigo_promocional}
+                  <div className="mt-auto flex flex-col gap-3">
+                    {desc.codigo_promocional && (
+                      <button
+                        onClick={() => copiarCodigo(desc)}
+                        className="flex items-center justify-between w-full px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-dashed border-gray-300 hover:border-[#5cc0b6] rounded-xl transition-all group/code"
+                        title="Clic para copiar el código"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          <span className="text-xs font-black text-gray-600 tracking-widest uppercase truncate">
+                            {desc.codigo_promocional}
+                          </span>
+                        </div>
+                        <span className={`text-xs font-bold shrink-0 ml-2 transition-colors ${yaCopio ? 'text-emerald-600' : 'text-gray-400 group-hover/code:text-[#5cc0b6]'}`}>
+                          {yaCopio ? '¡Copiado!' : 'Copiar'}
                         </span>
-                      </div>
-                      <span className={`text-xs font-bold shrink-0 ml-2 transition-colors ${yaCopio ? 'text-emerald-600' : 'text-gray-400 group-hover/code:text-[#5cc0b6]'}`}>
-                        {yaCopio ? '¡Copiado!' : 'Copiar'}
-                      </span>
-                    </button>
-                  )}
+                      </button>
+                    )}
 
-                  <div className={`mt-auto flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${venc.bg} ${venc.color}`}>
-                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {venc.texto}
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${venc.bg} ${venc.color}`}>
+                      <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {venc.texto}
+                    </div>
                   </div>
                 </div>
               </div>
