@@ -10,7 +10,8 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Al cargar la app, se verifica la cookie
+  // Al cargar la app, se verifica la cookie.
+  // Si el primer intento falla (ej: Cold Start de Render), reintenta una vez tras 4 segundos.
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -19,9 +20,23 @@ export const AuthProvider = ({ children }) => {
           setUser(res.user);
           setIsAuthenticated(true);
         }
-      } catch (error) {
-        setUser(null);
-        setIsAuthenticated(false);
+      } catch {
+        // Primer intento fallido: puede ser Cold Start del servidor. Esperar y reintentar.
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 4000));
+          const res = await getMe();
+          if (res.success) {
+            setUser(res.user);
+            setIsAuthenticated(true);
+          } else {
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        } catch {
+          // Segundo intento también falló: usuario no autenticado
+          setUser(null);
+          setIsAuthenticated(false);
+        }
       } finally {
         setIsLoading(false);
       }
