@@ -253,7 +253,7 @@ export default function AdminDescuentos() {
           <table className="w-full text-left border-collapse table-auto">
             
             {/* Cabecera Fija */}
-            <thead className="bg-gray-50/70 sticky top-0 backdrop-blur-xs border-b border-gray-100 z-10">
+            <thead className="bg-gray-50 sticky top-0 border-b border-gray-100 z-10">
               <tr>
                 {/* Título & Comercio */}
                 <th className="px-4 md:px-6 py-4 text-xs font-bold text-[#243e7b] uppercase tracking-wider">Beneficio / Comercio</th>

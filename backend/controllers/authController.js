@@ -75,13 +75,13 @@ exports.register = async (req, res) => {
     }
 
     // Validaciones de Contraseña Segura
-    // Mínimo 8 caracteres, al menos un número, al menos una mayúscula y al menos un carácter especial/símbolo
-    const contraseñaValida = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>])[a-zA-Z0-9!@#$%^&*(),.?":{}|<>]{8,}$/;
+    // Mínimo 8 caracteres, al menos un número, al menos una mayúscula y al menos un carácter no-alfanumérico
+    const contraseñaValida = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,}$/;
     
     if (!contraseñaValida.test(password)) {
       return res.status(400).json({ 
         success: false, 
-        error: 'La contraseña debe tener al menos 8 caracteres, incluir al menos un número, una letra mayúscula y al menos un símbolo especial (!@#$%^&*)' 
+        error: 'La contraseña debe tener al menos 8 caracteres, incluir al menos un número, una letra mayúscula y al menos un símbolo especial' 
       });
     }
 

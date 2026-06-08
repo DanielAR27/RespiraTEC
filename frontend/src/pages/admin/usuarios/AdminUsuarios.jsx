@@ -200,7 +200,7 @@ export default function AdminUsuarios() {
         ) : (
           <div className="overflow-x-auto max-h-[420px] overflow-y-auto custom-scrollbar">
             <table className="w-full text-left border-collapse table-auto">
-              <thead className="bg-gray-50/70 sticky top-0 backdrop-blur-xs border-b border-gray-100 z-10">
+              <thead className="bg-gray-50 sticky top-0 border-b border-gray-100 z-10">
                 <tr>
                   <th className="py-4 px-4 md:px-6 text-xs font-bold text-[#243e7b] uppercase tracking-wider">Usuario</th>
                   <th className="hidden sm:table-cell py-4 px-4 md:px-6 text-xs font-bold text-[#243e7b] uppercase tracking-wider">Email</th>
@@ -364,6 +364,30 @@ export default function AdminUsuarios() {
                   })}
                 </p>
               </div>
+              {/* Cambio de rol desde el modal (visible en cualquier tamaño) */}
+              {detailModal.user._id !== currentUser.id && (
+                <div className="border-t border-gray-100 pt-4">
+                  <span className="block text-2xs font-extrabold text-gray-400 uppercase tracking-wider mb-2">Cambiar Rol</span>
+                  <div className="relative">
+                    <select
+                      value={detailModal.user.role}
+                      onChange={(e) => {
+                        handleOpenRoleModal(detailModal.user, e.target.value);
+                        setDetailModal({ open: false, user: null });
+                      }}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold py-2.5 pl-3.5 pr-10 outline-none focus:border-[#5cc0b6] focus:ring-2 focus:ring-[#5cc0b6]/20 transition-all cursor-pointer text-gray-700 appearance-none"
+                    >
+                      <option value="user">Usuario Regular</option>
+                      <option value="admin">Administrador</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 flex justify-end">
