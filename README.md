@@ -46,24 +46,24 @@ El sitio oficial actual de la universidad para la visualización de eventos, tal
 <td width="50%">
 
 ### 🎓 Para Estudiantes
-- 📅 Explorar **eventos** universitarios con detalle completo
-- 🎨 Inscribirse en **talleres** con sistema de cupos en tiempo real
-- 🏷️ Acceder a **descuentos** exclusivos con códigos promocionales
-- 🏛️ Solicitar membresía en **asociaciones** estudiantiles
-- 📜 Descargar **certificados PDF** de talleres completados
-- 👤 Gestionar su **perfil** y foto con Cloudinary
-- ⭐ Dejar **feedback** y calificaciones de actividades
+- Explorar **eventos** universitarios con detalle completo
+- Inscribirse en **talleres** con sistema de cupos en tiempo real
+- Acceder a **descuentos** exclusivos con códigos promocionales
+- Solicitar membresía en **asociaciones** estudiantiles
+- Descargar **certificados PDF** de talleres completados
+- Gestionar su **perfil** y foto con Cloudinary
+- Dejar **feedback** y calificaciones de actividades
 
 </td>
 <td width="50%">
 
 ### 🛡️ Para Administradores
-- 📊 **Panel de administración** completo (CRUD)
-- 📝 Gestión de eventos, talleres, descuentos y asociaciones
-- 👥 Administración de **usuarios** y roles
-- ✅ Aprobación / rechazo de solicitudes de membresía
-- 🖼️ Subida de imágenes con **Cloudinary**
-- 📈 Conteo de asistentes e inscritos en tiempo real
+- **Panel de administración** completo (CRUD)
+- Gestión de eventos, talleres, descuentos y asociaciones
+- Administración de **usuarios** y roles
+- Aprobación y rechazo de solicitudes de membresía
+- Subida de imágenes con **Cloudinary**
+- Conteo de asistentes e inscritos en tiempo real
 
 </td>
 </tr>
@@ -87,9 +87,9 @@ El sitio oficial actual de la universidad para la visualización de eventos, tal
 
 El sistema incluye una pasarela de pago simulada con dos métodos:
 
-> **💠 Tarjeta de Crédito/Débito** — Formulario con validación de 16 dígitos, fecha y CVV con animación de procesamiento.
+> **Tarjeta de Crédito/Débito** — Formulario con validación de 16 dígitos, fecha y CVV con animación de procesamiento.
 >
-> **📱 SINPE Móvil** — Código QR simulado con confirmación instantánea tras verificación.
+> **SINPE Móvil** — Código QR simulado con confirmación instantánea tras verificación.
 
 <br />
 
@@ -171,11 +171,11 @@ RespiraTEC/
 
 | Tecnología | Uso |
 |:---:|:---|
-| ⚛️ React | Interfaz de usuario |
-| ⚡ Vite | Build & Dev Server |
-| 🎨 Tailwind CSS | Sistema de diseño |
-| 🧭 React Router | Navegación SPA |
-| 🔑 Context API | Estado global |
+| React | Interfaz de usuario |
+| Vite | Build & Dev Server |
+| Tailwind CSS | Sistema de diseño |
+| React Router | Navegación SPA |
+| Context API | Estado global |
 
 </td>
 <td align="center" width="33%">
@@ -187,11 +187,11 @@ RespiraTEC/
 
 | Tecnología | Uso |
 |:---:|:---|
-| 🟢 Node.js | Runtime |
-| 🚂 Express | Framework HTTP |
-| 🍃 MongoDB | Base de datos |
-| 🔐 JWT | Autenticación |
-| 🔒 BcryptJS | Hashing |
+| Node.js | Runtime |
+| Express | Framework HTTP |
+| MongoDB | Base de datos |
+| JWT | Autenticación |
+| BcryptJS | Hashing |
 
 </td>
 <td align="center" width="33%">
@@ -203,11 +203,11 @@ RespiraTEC/
 
 | Tecnología | Uso |
 |:---:|:---|
-| ☁️ Cloudinary | Almacenamiento de imágenes |
-| 📄 PDFKit | Generación de certificados |
-| 🐳 Docker | Contenerización |
-| 🛡️ Helmet | Seguridad HTTP |
-| 🧹 Mongo Sanitize | Protección NoSQL |
+| Cloudinary | Almacenamiento de imágenes |
+| PDFKit | Generación de certificados |
+| Docker | Contenerización |
+| Helmet | Seguridad HTTP |
+| Mongo Sanitize | Protección NoSQL |
 
 </td>
 </tr>
@@ -234,7 +234,7 @@ RespiraTEC/
 ### ⚙️ Opción 1 — Instalación Manual
 
 <details>
-<summary><strong>1️⃣ Clonar el repositorio</strong></summary>
+<summary><strong>1. Clonar el repositorio</strong></summary>
 
 <br />
 
@@ -246,7 +246,7 @@ cd RespiraTEC
 </details>
 
 <details>
-<summary><strong>2️⃣ Configurar variables de entorno</strong></summary>
+<summary><strong>2. Configurar variables de entorno</strong></summary>
 
 <br />
 
@@ -271,7 +271,7 @@ VITE_API_URL=http://localhost:5000/api
 </details>
 
 <details>
-<summary><strong>3️⃣ Levantar el Backend</strong></summary>
+<summary><strong>3. Levantar el Backend</strong></summary>
 
 <br />
 
@@ -281,12 +281,12 @@ npm install
 npm run dev
 ```
 
-> 🟢 El servidor se ejecutará en `http://localhost:5000`
+> El servidor se ejecutará en `http://localhost:5000`
 
 </details>
 
 <details>
-<summary><strong>4️⃣ Levantar el Frontend</strong></summary>
+<summary><strong>4. Levantar el Frontend</strong></summary>
 
 <br />
 
@@ -296,7 +296,7 @@ npm install
 npm run dev
 ```
 
-> 🟢 La aplicación estará disponible en `http://localhost:5173`
+> La aplicación estará disponible en `http://localhost:5173`
 
 </details>
 
@@ -403,17 +403,17 @@ Panel completo para administradores con gestión CRUD de eventos, talleres, desc
 
 ## 🗺️ Roadmap
 
-- [x] 🔐 Autenticación completa con JWT y roles
-- [x] 📅 CRUD de eventos con asistencia en tiempo real
-- [x] 🎨 CRUD de talleres con inscripción y cupos
-- [x] 🏷️ Sistema de descuentos con códigos promocionales
-- [x] 🏛️ Asociaciones con flujo de solicitud de membresía
-- [x] 📜 Generación de certificados PDF con PDFKit
-- [x] 💳 Pasarela de pago simulada (Tarjeta + SINPE)
-- [x] ⭐ Sistema de feedback y calificaciones
-- [x] 🔍 Filtros de búsqueda por categoría, fecha y ubicación
-- [x] 🛡️ Panel de administración completo
-- [x] 🐳 Contenerización con Docker Compose
+- [x] Autenticación completa con JWT y roles
+- [x] CRUD de eventos con asistencia en tiempo real
+- [x] CRUD de talleres con inscripción y cupos
+- [x] Sistema de descuentos con códigos promocionales
+- [x] Asociaciones con flujo de solicitud de membresía
+- [x] Generación de certificados PDF con PDFKit
+- [x] Pasarela de pago simulada (Tarjeta + SINPE)
+- [x] Sistema de feedback y calificaciones
+- [x] Filtros de búsqueda por categoría, fecha y ubicación
+- [x] Panel de administración completo
+- [x] Contenerización con Docker Compose
 
 <br />
 
@@ -429,12 +429,12 @@ Hecho por estudiantes del **Tecnológico de Costa Rica**
 
 <br />
 
-| 👤  Integrante |
+| Integrante |
 |:---|
-|  **Daniel Alemán** |
-|  **José Jiménez** |
-|  **Luis Meza** |
-|  **José Fabián Zumbado** |
+| **Daniel Alemán** |
+| **José Jiménez** |
+| **Luis Meza** |
+| **José Fabián Zumbado** |
 
 </div>
 
